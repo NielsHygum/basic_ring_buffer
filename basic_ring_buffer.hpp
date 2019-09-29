@@ -2,8 +2,7 @@
 // Created by nni on 12.10.18.
 //
 
-#ifndef BINAURALAUDIO_RINGBUFFER_H
-#define BINAURALAUDIO_RINGBUFFER_H
+#pragma once
 
 #include <cstring>
 #include <cstddef>
@@ -201,5 +200,3 @@ void RingBuffer<bufferSize>::resetHeadAndTail()
     tail = 0;
 }
 
-
-#endif //BINAURALAUDIO_RINGBUFFER_H
