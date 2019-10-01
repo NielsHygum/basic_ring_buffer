@@ -19,7 +19,8 @@ protected:
     std::atomic<size_t> tail = {0};
 
 public:
-
+    template<typename T>
+    float rootMeanSquareOfSamples(size_t number_of_samples);
     size_t copyOldestDataFromBuffer(void * destination, const size_t bytesToRead);
     void writeNewestDataToBuffer(const void * source, const size_t bytesToWrite);
     size_t currentFreeCapacity();
@@ -35,6 +36,47 @@ public:
 
 #include <iostream>
 #include <fstream>
+#include <cmath>
+
+template <size_t bufferSize>
+template <typename T>
+float RingBuffer<bufferSize>::rootMeanSquareOfSamples(size_t number_of_samples)
+{
+    float squared_sum = 0;
+
+    size_t sum_over_samples = std::min(number_of_samples, bufferSize/sizeof(T));
+
+    size_t sample_head = head/sizeof(T);
+
+    T * buffer_start_ptr = reinterpret_cast<T*>(data);
+    T * head_ptr = reinterpret_cast<T*>(data+head);
+
+    if(sample_head > sum_over_samples)
+    {
+        for(T* sample_data_ptr = buffer_start_ptr + (sample_head-sum_over_samples); sample_data_ptr < head_ptr ; ++sample_data_ptr)
+        {
+            squared_sum += static_cast<float>((*sample_data_ptr)*(*sample_data_ptr));
+        }
+
+    } else {
+
+        T* last_sample_in_buffer_ptr = reinterpret_cast<T*>(buffer_start_ptr) + bufferSize/sizeof(T)-1;
+
+        for(T* sample_data_ptr = buffer_start_ptr+(bufferSize/sizeof(T)-(sum_over_samples-sample_head)); sample_data_ptr < last_sample_in_buffer_ptr; ++sample_data_ptr)
+        {
+            squared_sum += static_cast<float>((*sample_data_ptr)*(*sample_data_ptr));
+        }
+
+        for(T* sample_data_ptr = buffer_start_ptr; sample_data_ptr < head_ptr ; ++sample_data_ptr)
+        {
+            squared_sum += static_cast<float>((*sample_data_ptr)*(*sample_data_ptr));
+        }
+
+    }
+
+    return sqrt(squared_sum);
+}
+
 
 template <size_t bufferSize>
 size_t RingBuffer<bufferSize>::copyOldestDataFromBuffer(void * destination, const size_t bytesToRead)
