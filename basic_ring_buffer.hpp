@@ -21,6 +21,8 @@ protected:
 public:
     template<typename T>
     float rootMeanSquareOfSamples(const size_t number_of_samples) const;
+    template<typename T>
+    float rootMeanSquareOfAllSamples() const;
     size_t copyOldestDataFromBuffer(void * destination, const size_t bytesToRead);
     void writeNewestDataToBuffer(const void * source, const size_t bytesToWrite);
     size_t currentFreeCapacity();
@@ -77,6 +79,25 @@ float RingBuffer<bufferSize>::rootMeanSquareOfSamples(const size_t number_of_sam
     return sqrt(squared_sum);
 }
 
+template <size_t bufferSize>
+template <typename T>
+float RingBuffer<bufferSize>::rootMeanSquareOfAllSamples() const
+{
+    float squared_sum = 0;
+
+    float number_of_samples = bufferSize/sizeof(T);
+
+    const T * buffer_start_ptr = reinterpret_cast<const T*>(data);
+    const T * buffer_end_ptr = reinterpret_cast<const T*>(data+bufferSize-sizeof(T));
+
+    for (const T *sample_data_ptr = buffer_start_ptr; sample_data_ptr < buffer_end_ptr; ++sample_data_ptr)
+    {
+        squared_sum += static_cast<float>((*sample_data_ptr) * (*sample_data_ptr));
+    }
+
+
+    return sqrt(squared_sum);
+}
 
 template <size_t bufferSize>
 size_t RingBuffer<bufferSize>::copyOldestDataFromBuffer(void * destination, const size_t bytesToRead)
